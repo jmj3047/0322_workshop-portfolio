@@ -1,0 +1,22 @@
+[
+    {
+      "title": "Jongundang Health Care Chatbot Service",
+      "description": "{{project-description}}",
+      "url": "{{project-url}}"
+    },
+    {
+      "title": "Youngbo Chemical Azure Open AI-based Business Support Chat-Bot Service",
+      "description": "{{project-description}}",
+      "url": "{{project-url}}"
+    },
+    {
+      "title": "Security KPI Dashboard Development",
+      "description": "{{project-description}}",
+      "url": "{{project-url}}"
+    },
+    {
+      "title": "Predicting returning users using machine learning and retention",
+      "description": "{{project-description}}",
+      "url": "{{project-url}}"
+    }
+  ]
