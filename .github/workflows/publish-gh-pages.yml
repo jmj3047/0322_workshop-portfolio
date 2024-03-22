@@ -1,10 +1,11 @@
 name: Publish Blazor App to GitHub Pages
 
-on:
+# 깃헙 액션 워크플로우가 어떤 조건에서 실행이 될건지
+on: 
   workflow_dispatch:
   push:
     paths:
-      - 'src/MyPortfolio/**'
+      - 'workshop/MyPortfolio/**' #이 폴더로 파일이 들어왔을때, 변경됐을때 돌리라는 의미. -> 우리는 워크샵이니까 src 부분 워크샵으로 바꿔주면 됨
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -17,66 +18,71 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 
+# 잡 하나당 빌드서버 하나라고 생각하면 됨
 jobs:
   build_test_artifact:
     name: Build App
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # 우분투 기반의 빌드 서버, 만약에 애플 앱을 만들면 맥에서 돌아가게끔 만들어야 함
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup .NET SDK
+    - name: Setup .NET SDK # 닷넷 버전 설정
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.x'
 
-    - name: Set basepath on index.html
-      shell: pwsh
-      run: |
-        $filepath = "./src/MyPortfolio/wwwroot/index.html"
-        $repository = "${{ github.repository }}" -replace "${{ github.repository_owner }}", ""
 
-        $html = Get-Content -Path $filepath
-        $html -replace "<base href=`"/`" />", "<base href=`"$repository/`" />" | Out-File -Path $filepath -Force
+    - name: Set basepath on index.html
+        shell: pwsh
+        run: |
+          $filepath = "./workshop/MyPortfolio/wwwroot/index.html"
+          $repository = "${{ github.repository }}" -replace "${{ github.repository_owner }}", ""
+      
+          $html = Get-Content -Path $filepath
+          $html -replace "<base href=`"/`" />", "<base href=`"$repository/`" />" | Out-File -Path $filepath -Force
 
     - name: Set basepath on JSON objects
-      shell: pwsh
-      run: |
-        $filepath = "./src/MyPortfolio/wwwroot/sample-data"
-        $repository = "${{ github.repository }}" -replace "${{ github.repository_owner }}", ""
-
-        Get-ChildItem -Path $filepath -Filter "*.json" | ForEach-Object {
-          $json = Get-Content -Path $_.FullName
-          $json.Replace("../", "$repository/") | Out-File -Path $_.FullName -Force
-        }
+        shell: pwsh
+        run: |
+          $filepath = "./workshop/MyPortfolio/wwwroot/sample-data"
+          $repository = "${{ github.repository }}" -replace "${{ github.repository_owner }}", ""
+      
+          Get-ChildItem -Path $filepath -Filter "*.json" | ForEach-Object {
+              $json = Get-Content -Path $_.FullName
+              $json.Replace("../", "$repository/") | Out-File -Path $_.FullName -Force
+          }
 
     - name: Restore NuGet packages
       shell: bash
       run: |
-        dotnet restore ./src
+        dotnet restore ./workshop
 
     - name: Build solution
       shell: bash
       run: |
-        dotnet build ./src -c Release
+        dotnet build ./workshop -c Release
 
     - name: Test solution
       shell: bash
       run: |
-        dotnet test ./src -c Release
+        dotnet test ./workshop -c Release
 
     - name: Publish artifact
       shell: bash
       run: |
-        dotnet publish ./src/MyPortfolio -c Release -o published
+        dotnet publish ./workshop/MyPortfolio -c Release -o published
 
+    # 압축해서 어디론가 집어 넣음
     - name: Upload artifact for web
       uses: actions/upload-pages-artifact@v1
       with:
         path: published/wwwroot
 
+
+  # 앱 배포 build_test_artifact이게 무조건 실행아 돼야 디플로이 됨
   deploy:
     name: Deploy App to GitHub Pages
     needs:
@@ -92,3 +98,6 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v1
+
+
+
